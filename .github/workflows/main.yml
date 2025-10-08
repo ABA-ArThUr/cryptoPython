@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -33,7 +33,7 @@ jobs:
 
   test:
     needs: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Download project files
         uses: actions/download-artifact@v4
@@ -52,7 +52,7 @@ jobs:
 
   dockerize:
     needs: test
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Download project files
         uses: actions/download-artifact@v4

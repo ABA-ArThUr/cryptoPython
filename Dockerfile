@@ -3,12 +3,12 @@
 FROM python:3.12-slim
 
 # Répertoire de travail
-WORKDIR /app
+WORKDIR /projet_chiffrement/cryptoPython
 
 # Copie les fichiers du projet dans le conteneur
 
-COPY . /app
-WORKDIR /app
+COPY . /projet_chiffrement/cryptoPython
+WORKDIR /projet_chiffrement/cryptoPython
 
 # Installation des dépendances système si besoin
 RUN apt-get update && apt-get install -y \

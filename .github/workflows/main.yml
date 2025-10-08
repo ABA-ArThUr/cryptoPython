@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  test_build:
     runs-on: self-hosted
     steps:
       - name: Checkout code
@@ -17,10 +17,7 @@ jobs:
         run: |
           echo "Compilation du programme!!"
           g++ -c hello.cpp -o hello.o
-          g++ -c test1.cpp -o test1.o
-          g++ -c test2.cpp -o test2.o
           g++ -c main.cpp -o main.o
-          
           g++ main.o hello.o -o monprog
 
       - name: Upload build artifacts
@@ -30,52 +27,47 @@ jobs:
           path: |
             monprog
             hello.o
-            test1.o
-            test2.o
 
-  test1:
-    needs: build
+  dockerize_and_deploy:
+    name: Build Docker image and deploy
+    needs: test_build
     runs-on: self-hosted
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: binaries
 
-      - name: Run Test 1
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
         run: |
-          echo "Execution des tests 1"          
-          g++ test1.o hello.o -o test1
-          chmod +x test1
-          ./test1
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/monprog:${{ github.sha }}
+          echo "Building Docker image: $IMAGE_NAME"
 
-  test2:
-    needs: build
-    runs-on: self-hosted
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: binaries
+          # Crée un Dockerfile si nécessaire
+          cat > Dockerfile <<'EOF'
+          FROM ubuntu:22.04
+          WORKDIR /app
+          COPY monprog .
+          RUN chmod +x monprog
+          CMD ["./monprog"]
+          EOF
 
-      - name: Run Test 2
+          docker build -t $IMAGE_NAME .
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+
+      - name: Push Docker image
+        run: docker push $IMAGE_NAME
+
+      - name: Deploy container
         run: |
-          echo "Execution des tests 2"  
-          g++ test2.o hello.o -o test2
-          chmod +x test2
-          ./test2
-
-  deploy:
-    needs: [test1, test2]
-    runs-on: self-hosted
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: binaries
-
-      - name: Deploy binary
-        run: |
-          pwd
-          id
-          cp monprog /tmp/mainAppli
+          echo "Déploiement du conteneur..."
+          docker stop monprog || true
+          docker rm monprog || true
+          docker run -d --name monprog -p 8080:8080 $IMAGE_NAME

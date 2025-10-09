@@ -2,13 +2,13 @@ name: Python CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, cryptoHttp ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, cryptoHttp ]
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'   # version stable et supportée
 
       - name: Install dependencies
         run: |
@@ -30,15 +30,21 @@ jobs:
           path: |
             *.py
             requirements.txt
+            tests/
 
   test:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Download project files
         uses: actions/download-artifact@v4
         with:
           name: python-project
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -48,21 +54,13 @@ jobs:
       - name: Run tests
         run: |
           pip install pytest
-          pytest || echo "Aucun test trouvé, on continu..."
+          pytest || echo "Aucun test trouvé, on continue..."
 
   dockerize:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Download project files- name: Build Docker image
-        run: |
-          echo "FROM python:3.12-slim" > Dockerfile
-          echo "WORKDIR /app" >> Dockerfile
-          echo "COPY . /app" >> Dockerfile
-          echo "RUN pip install --upgrade pip && pip install -r requirements.txt || true" >> Dockerfile
-          echo 'CMD ["python", "main.py"]' >> Dockerfile
-          docker build -t python-app:latest .
-
+      - name: Download project files
         uses: actions/download-artifact@v4
         with:
           name: python-project
@@ -79,4 +77,3 @@ jobs:
       - name: Run Docker container
         run: |
           docker run --rm --name python-app-run python-app:latest
-

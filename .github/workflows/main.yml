@@ -71,7 +71,7 @@ jobs:
           echo "WORKDIR /app" >> Dockerfile
           echo "COPY . /app" >> Dockerfile
           echo "RUN pip install --upgrade pip && pip install -r requirements.txt || true" >> Dockerfile
-          echo 'CMD ["python", "main.py"]' >> Dockerfile
+          echo 'CMD ["main.py"]' >> Dockerfile
           docker build -t python-app:latest .
 
       - name: Run Docker container

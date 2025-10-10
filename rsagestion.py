@@ -8,6 +8,22 @@ import os
 
 
 class RsaGestion:
+
+    def generate_rsa_keys_pem():
+    private_key, public_key = generate_keys()  # ou fonction existante
+    priv_pem = serialize_private(private_key)
+    pub_pem = serialize_public(public_key)
+    return priv_pem, pub_pem
+
+def encrypt_rsa(pub_pem: bytes, plaintext: bytes) -> bytes:
+    public_key = load_public(pub_pem)
+    return encrypt(public_key, plaintext)
+
+def decrypt_rsa(priv_pem: bytes, ciphertext: bytes) -> bytes:
+    private_key = load_private(priv_pem)
+    return decrypt(private_key, ciphertext)
+
+    
     def __init__(self):
         print("Construction de la classe")
 

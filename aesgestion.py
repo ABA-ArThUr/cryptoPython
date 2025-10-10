@@ -7,6 +7,15 @@ from Crypto.Util.Padding import pad, unpad
 
 
 class AesGestion:
+
+    # Exemple dans aesgestion.py
+def encrypt_aes(key: bytes, plaintext: bytes) -> bytes:
+    # Suppose que tu as déjà une fonction “encrypt” interne
+    return encrypt(key, plaintext)
+
+def decrypt_aes(key: bytes, ciphertext: bytes) -> bytes:
+    return decrypt(key, ciphertext)
+
     def __init__(self):
         self.aes_key = None
         self.iv = None
